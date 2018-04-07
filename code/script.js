@@ -9,7 +9,7 @@ var userSelection;
 var userRating;
 var _user;
 var demoUser;
-var _favMovies = [];
+var _favMovies;
 
 $(document).ready(()=>{
     $("#toggleCurrentMovies").click(toggleCurrentMovies);
@@ -28,6 +28,8 @@ $(document).ready(()=>{
             'username': $("#regUser").val(),
             'password': $("#regPass").val()
         };
+
+        _favMovies = _user.ratings;
 
         $("#userMsg").text($("#regUser").val());
         hideElement($(this));
@@ -204,6 +206,7 @@ function updateFavList(){
 }
 
 function removeMovie(id){
+    _user.total -= parseFloat(_favMovies[id].rating);
     _favMovies.splice(id,1);
 
     updateFavList();
@@ -211,10 +214,14 @@ function removeMovie(id){
 
 function updateRate(favID,rate){
 
-    if(_favMovies[favID].rating == rate)
+    if(_favMovies[favID].rating == rate){
         _favMovies[favID].rating = 0;
-    else
+        _user.total -= parseFloat(rate);
+    }
+    else{
+        _user.total = parseFloat(_user.total) + parseFloat(rate) - parseFloat(_favMovies[favID].rating);
         _favMovies[favID].rating = rate;
+    }
 
     updateFavList();
 }
@@ -348,9 +355,13 @@ function toggleCurrentMovies(){
 }
 
 function calculate(){
+
+    if(_favMovies.length < 5)
+        return;
+
     var pearson = [];
 
-    _user.ratings = _favMovies;
+    // _user.ratings = _favMovies;
 
     for(var i=0; i< _userRating.length;i++){
 
