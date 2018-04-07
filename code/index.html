@@ -5,49 +5,49 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Movie Recommendation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
     <script src="https://code.jquery.com/jquery.min.js"></script>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+    <link href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
     <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="spearson.js"></script>
     <script src="script.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>
-            Movies Recommendation
+            <img src="imgs/logo.png" alt=""> Movies Recommendation
         </h1>
 
-        <div class="lds-ripple"><div></div><div></div></div>
-
-        <!-- <table class="table">
-            <thead>
-                <tr>
-                    <th>MovieID</th>
-                    <th>Title</th>
-                    <th>Genres</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-        </table> -->
         <div class="col-md-12">
-            Pick UserID:
-            <select name="user" id="userSelection" class="form-control" onchange="selectUser()"></select>
+            <form id="regSection">
+                <input required class="form-control" type="text" id="regUser" placeholder="Username">
+                <input required class="form-control" type="password" id="regPass" placeholder="Password">
+                <button class="btn btn-success" type="submit">Register</button>
+            </form>
 
-            <div id="ratings">
-                <button class="btn" id="findNewMovies">Find new movies</button>
-                <button class="btn" id='toggleCurrentMovies'>Toggle current movies</button>
-                <br>
-                <div class="col-md-6">
-                    User's movies rating:
-                    <ul id="userRating"></ul>
-                </div>
 
-                <div class="col-md-6">
-                    New recommended movies:
-                    <ul id="recMovies"></ul>
+            <div id="MovieRatingSection">
+                <div class="row">
+                    <b> Hey <span id="userMsg"></span>, RATE YOUR MOVIES! </b>
+                    <br>
+                    <div class="col-md-6">
+                        Search movie name here:
+                        <input type="text" class="form-control" id="acInput">
+                        <br>
+
+                        <strong> My Movies </strong> <!-- - <span id="findNewMovies"> Find New Movie By Recommendation</span> -->
+                        <div class="list-group" id="ratedMovies">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" id='recDiv'>
+                        New recommended movies:
+                        <ul id="recMovies"></ul>
+                    </div>                    
+                          
                 </div>
             </div>
 

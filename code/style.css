@@ -1,4 +1,4 @@
-.lds-ripple {
+/* .lds-ripple {
     margin: auto;
     display: inline-block;
     position: relative;
@@ -31,13 +31,77 @@
       height: 58px;
       opacity: 0;
     }
-}
+} */
 
-select.form-control{
+.form-control{
+    margin:auto;
     width: 20vw;
+    margin-bottom: 10px;
 }
 
 #ratings{
     margin-top: 20px;
     margin-bottom: 20px;
+}
+
+#regSection{
+    display: none;
+    text-align: center;
+}
+
+#regSection>button{
+    width: 20vw;
+}
+
+
+#acInput{
+    width: 35vw;
+}
+
+#ratedMovies>.list-group-item{
+    width: 35vw;
+    display: flex;
+}
+
+.glyphicon.glyphicon-star, .glyphicon.glyphicon-star-empty{
+    font-size: 20px
+}
+
+.glyphicon.glyphicon-star:hover, .glyphicon.glyphicon-star-empty:hover{
+    color: #fee949;
+}
+
+.ui-autocomplete { height: 200px; overflow-y: scroll; overflow-x: hidden;}
+
+#findNewMovies{
+    color: #5f37ce;
+}
+
+#findNewMovies:hover{
+    color: #7759c9;
+    cursor: pointer;
+}
+
+.glyphicon:hover{
+    cursor: pointer;
+}
+
+.glyphicon-plus:hover{
+    color: #da913d;
+}
+
+#recMovies{
+    list-style: none;
+}
+
+.mlist{
+    float: left;
+    width: 76.4%;
+}
+
+.glyphicon-minus{
+    margin-right: 2px;
+    color: #555;
+    font-size: 12px;
+    line-height: 16px;
 }

@@ -1,6 +1,7 @@
 var movies = [];
 var _userRating = [];
 var _MovieRating = [];
+var _moviesTitle;
 var _table;
 var showList = false;
 
@@ -8,21 +9,45 @@ var userSelection;
 var userRating;
 var _user;
 var demoUser;
+var _favMovies = [];
 
 $(document).ready(()=>{
-    // hideElement("#table");
     $("#toggleCurrentMovies").click(toggleCurrentMovies);
-       
-    showLoading();
+    
+    if($("#ratedMovies").children().length == 0){
+        $("#recDiv").hide();
+    }
+
+    $("#regSection").on('submit', function(e){
+        e.preventDefault();
+        
+        _user = {
+            'id': "-1",
+            'ratings': [],
+            'total': 0,
+            'username': $("#regUser").val(),
+            'password': $("#regPass").val()
+        };
+
+        $("#userMsg").text($("#regUser").val());
+        hideElement($(this));
+        showElement("#MovieRatingSection");
+    });
+    
+    // showLoading();
+    hideElement("#MovieRatingSection");
     hideElement("#ratings");
 
-    fetchRanksList(updateUserSelection);
-    fetchMoviesList(updateTable);
-
     setTimeout(()=>{
-        hideLoading();
-        $("#findNewMovies").click(calculate);
-    },500);
+        fetchRanksList();
+        fetchMoviesList();
+        
+        setTimeout(()=>{
+            showElement("#regSection");
+            // hideLoading();
+            $("#findNewMovies").click(calculate);
+        },500);
+    }, 100);
 });
 
 function hideElement(elem){
@@ -120,7 +145,86 @@ function fetchMoviesList(callback){
 
         if(showList)
             callback();
+
+        _moviesTitle = movies.map(r => r.title);
+
+        $( "#acInput" ).autocomplete({
+            source: _moviesTitle,
+            minLength: 3,
+            select: function(event, ui){
+                console.log(event);
+                
+                if( alreadyFaved(ui.item.label) )
+                    return;
+                else{
+                    _favMovies.push({
+                        'title': ui.item.label,
+                        'movieid': movies.find(m => m.title == ui.item.label).movieid,
+                        'rating': 0
+                    })
+                }
+
+                updateFavList();
+            }
+        });
     });
+}
+
+function updateFavList(){
+    $("#ratedMovies").html('');
+
+    for(var i=0; i<_favMovies.length;i++){
+        $("#ratedMovies").append($('<div class="list-group-item">').html(`
+            <span class="glyphicon glyphicon-minus" aria-hidden="true" onclick="removeMovie(${i})"></span>
+            <span class="mlist"> <strong> ${_favMovies[i].title} </strong> </span> <div class="pull-right" id="rate_${_favMovies[i].movieid}"></div>
+        `));
+
+        counter = 0;
+        $(`#rate_${_favMovies[i].movieid}`).html('');
+
+        for (let j = 0; j < _favMovies[i].rating; j++) {
+            var fullStar = `<span class="glyphicon glyphicon-star" aria-hidden="true" onclick="updateRate(${i},${j+1})"></span>`;
+            $(`#rate_${_favMovies[i].movieid}`).append(fullStar);
+
+            counter++;
+        }
+
+        for(let j=counter; j<5; j++){
+            var emptyStar = `<span class="glyphicon glyphicon-star-empty" aria-hidden="true" onclick="updateRate(${i},${j+1})"></span>`;
+            $(`#rate_${_favMovies[i].movieid}`).append(emptyStar);
+        }
+    }
+
+    if($("#ratedMovies").children().length > 0){
+        $("#recDiv").show();
+    }else{
+        $("#recDiv").hide();
+    }
+    calculate();
+}
+
+function removeMovie(id){
+    _favMovies.splice(id,1);
+
+    updateFavList();
+}
+
+function updateRate(favID,rate){
+
+    if(_favMovies[favID].rating == rate)
+        _favMovies[favID].rating = 0;
+    else
+        _favMovies[favID].rating = rate;
+
+    updateFavList();
+}
+
+function alreadyFaved(title){
+    for(var i = 0; i< _favMovies.length; i++)
+        if(_favMovies[i].title == title)
+            return true;
+
+    return false;
 }
 
 function fetchRanksList(callback){
@@ -246,6 +350,8 @@ function toggleCurrentMovies(){
 function calculate(){
     var pearson = [];
 
+    _user.ratings = _favMovies;
+
     for(var i=0; i< _userRating.length;i++){
 
         demoUser = _userRating[i];
@@ -279,16 +385,23 @@ function calculate(){
     pearson = pearson.sort((a,b) =>{return b.p-a.p;});
     console.log(pearson);
 
-    console.log("selected user " + pearson[0].otherUser);
+    // console.log("selected user " + pearson[0].otherUser);
+
+    // console.log(parseFloat(pearson[0].p));
+    // if(parseFloat(pearson[0].p) <= 0)
+    //     return;
 
     var mathcedUser = findUserByID(_userRating,pearson[0].otherUser);
-    var DifList = findDifferentMovies(_user, mathcedUser);
+    var DifList = findDifferentMovies(_user, mathcedUser).sort((a,b) => {
+        return b.rating-a.rating;
+    });
 
     console.log(DifList);
 
     $("#recMovies").html('');
-    for(var i=0; i<DifList.length; i++)
-        $("#recMovies").append($("<li>").text(`${getMovieTitleById(DifList[i])}`));
+    let len = DifList.length > 25 ? 25 : DifList.length;
+    for(var i=0; i<len; i++)
+        $("#recMovies").append($("<li>").html(`<span class="glyphicon glyphicon-plus" onclick="addFavMovieFromRec(${DifList[i].id})"></span> ${getMovieTitleById(DifList[i].id)}`));
 }
 
 function findDifferentMovies(user1,user2){
@@ -296,7 +409,8 @@ function findDifferentMovies(user1,user2){
     for(var i = 0; i < user2.ratings.length; i++){
         var user1Rate = userRatedMovie(user1,user2.ratings[i].movieid);
         if(user1Rate == -1)
-            res.push(user2.ratings[i].movieid);
+            res.push({'id':user2.ratings[i].movieid,
+                    'rating': user2.ratings[i].rating});
     }
 
     return res;
@@ -325,4 +439,14 @@ function userRatedMovie(user,movieid){
     }
 
     return -1;
+}
+
+function addFavMovieFromRec(id){
+    _favMovies.push({
+        'title': movies.find(m => m.movieid == id).title,
+        'movieid': id,
+        'rating': 0
+    });
+
+    updateFavList();
 }
