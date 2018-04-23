@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -16,7 +17,15 @@
     <script src="spearson.js"></script>
     <script src="script.js"></script>
 </head>
+
 <body>
+    <div class="spinner">
+        <div class="inner-spinner">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
+        </div>
+    </div>
+
     <div class="container">
         <h1>
             <img src="imgs/logo.png" alt=""> Movies Recommendation
@@ -32,29 +41,32 @@
 
             <div id="MovieRatingSection">
                 <div class="row">
-                    <b> Hey <span id="userMsg"></span>, RATE YOUR MOVIES! </b>
+                    <b> Hey
+                        <span id="userMsg"></span>, RATE YOUR MOVIES! </b>
                     <br>
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         Search movie name here:
-                        <input type="text" class="form-control" id="acInput">
+                        <input type="text" class="form-control" id="acInput" onclick="select()">
                         <br>
 
                         <div id="movieContainer">
-                            <strong> My Movies </strong> <!-- - <span id="findNewMovies"> Find New Movie By Recommendation</span> -->
+                            <strong> My Movies </strong>
+                            <!-- - <span id="findNewMovies"> Find New Movie By Recommendation</span> -->
                             <div class="list-group" id="ratedMovies">
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-md-4" id='recDiv'>
+                    <div class="col-md-7" id='recDiv'>
                         New recommended movies:
                         <ul id="recMovies"></ul>
-                    </div>                    
-                          
+                    </div>
+
                 </div>
             </div>
 
         </div>
     </div>
 </body>
+
 </html>

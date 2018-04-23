@@ -49,9 +49,10 @@ $(document).ready(() => {
         fetchMoviesList();
 
         setTimeout(() => {
+            hideElement(".spinner");
             showElement("#regSection");
             // hideLoading();
-            $("#findNewMovies").click(calculate);
+            // $("#findNewMovies").click(calculate);
         }, 500);
     }, 100);
 });
@@ -208,7 +209,8 @@ function updateFavList() {
     } else {
         $("#recDiv").hide();
     }
-    calculate();
+
+    calculateHandler();
 }
 
 function removeMovie(id) {
@@ -360,10 +362,17 @@ function toggleCurrentMovies() {
     $("#userRating").toggle('slide');
 }
 
-function calculate() {
-
+function calculateHandler(){
     if (_favMovies.length < _minMovieSelection)
-        return;
+    return;
+
+    showElement(".spinner");
+
+    setTimeout(() => {
+        calculate();
+    }, 15);
+}
+function calculate() {
 
     var pearson = [];
 
@@ -456,6 +465,8 @@ function calculate() {
     $("#recMovies").html('');
     for (var i = 0; i < 25; i++)
         $("#recMovies").append($("<li>").html(`<span class="glyphicon glyphicon-plus" onclick="addFavMovieFromRec(${topRecMovies[i].id})"></span> ${getMovieTitleById(topRecMovies[i].id)}`));
+
+    hideElement(".spinner");
 }
 
 function findDifferentMovies(user1, user2) {
