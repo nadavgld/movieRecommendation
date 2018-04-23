@@ -55,11 +55,12 @@
 
 
 #acInput{
-    width: 35vw;
+    /* width: 35vw; */
+    margin: 0;
 }
 
 #ratedMovies>.list-group-item{
-    width: 35vw;
+    /* width: 35vw; */
     display: flex;
 }
 
