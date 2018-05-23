@@ -362,111 +362,120 @@ function toggleCurrentMovies() {
     $("#userRating").toggle('slide');
 }
 
-function calculateHandler(){
+function calculateHandler() {
     if (_favMovies.length < _minMovieSelection)
-    return;
+        return;
 
     showElement(".spinner");
 
     setTimeout(() => {
-        calculate();
+        calculate(_user).then((topRecMovies) => {
+
+
+            $("#recMovies").html('');
+            for (var i = 0; i < 25; i++)
+                $("#recMovies").append($("<li>").html(`<span class="glyphicon glyphicon-plus" onclick="addFavMovieFromRec(${topRecMovies[i].id})"></span> ${getMovieTitleById(topRecMovies[i].id)}`));
+
+            hideElement(".spinner");
+        });
     }, 15);
 }
-function calculate() {
+function calculate(user) {
 
-    var pearson = [];
+    return new Promise((resolve, reject) => {
+        var pearson = [];
 
-    // _user.ratings = _favMovies;
+        // _user.ratings = _favMovies;
 
-    for (var i = 0; i < _userRating.length; i++) {
+        for (var i = 0; i < _userRating.length; i++) {
 
-        demoUser = _userRating[i];
+            demoUser = _userRating[i];
 
-        if (demoUser.id == _user.id)
-            continue;
-
-        var mutualMovies = findMutualMovies(_user, demoUser);
-
-        var currentUserRatings = mutualMovies.map(r => {
-            return parseFloat(r.currentUser);
-        });
-
-        var demoUserRatings = mutualMovies.map(r => {
-            return parseFloat(r.otherUser);
-        });
-
-        // console.log(mutualMovies);
-        // console.log(currentUserRatings);
-        // console.log(demoUserRatings);
-
-        var p = spearson.correlation.pearson(currentUserRatings, demoUserRatings);
-
-        p = isNaN(p) ? 0 : p;
-        pearson.push({
-            'p': p,
-            'otherUser': demoUser.id,
-            'score': 0
-        });
-    }
-
-    pearson = pearson.sort((a, b) => { return b.p - a.p; });
-
-    var totalP = 0;
-    for (var i = 0; i < _TOPUSERS; i++)
-        totalP += pearson[i].p;
-
-    var topRecMovies = [];
-
-    for (var m = 0; m < _MovieRating.length; m++) {
-
-        const movie = _MovieRating[m];
-        var movieSum = 0;
-
-        for (var i = 0; i < _TOPUSERS; i++) {
-
-            var p = pearson[i].p;
-            var id = pearson[i].otherUser;
-            var mathcedUser = findUserByID(_userRating, id);
-
-            var userRatedMovie = mathcedUser.ratings.filter(m => m.movieid == movie.movieid);
-
-            if (userRatedMovie.length == 0)
+            if (demoUser.id == user.id)
                 continue;
 
-            // var DifList = findDifferentMovies(_user, mathcedUser).sort((a,b) => {
-            //     return b.rating-a.rating;
-            // });
+            var mutualMovies = findMutualMovies(user, demoUser);
 
-            var userAVG = parseFloat(mathcedUser.total / mathcedUser.ratings.length);
+            var currentUserRatings = mutualMovies.map(r => {
+                return parseFloat(r.currentUser);
+            });
 
-            movieSum += (p * (parseFloat(userRatedMovie[0].rating) - userAVG));
+            var demoUserRatings = mutualMovies.map(r => {
+                return parseFloat(r.otherUser);
+            });
+
+            // console.log(mutualMovies);
+            // console.log(currentUserRatings);
+            // console.log(demoUserRatings);
+
+            var p = spearson.correlation.pearson(currentUserRatings, demoUserRatings);
+
+            p = isNaN(p) ? 0 : p;
+            pearson.push({
+                'p': p,
+                'otherUser': demoUser.id,
+                'score': 0
+            });
         }
 
-        var finalScore = (movieSum / totalP + (_user.total / _user.ratings.length));
+        pearson = pearson.sort((a, b) => { return b.p - a.p; });
 
-        finalScore = isNaN(finalScore) ? 0 : finalScore;
+        var totalP = 0;
+        for (var i = 0; i < _TOPUSERS; i++)
+            totalP += pearson[i].p;
 
-        topRecMovies.push({
-            'id': movie.movieid,
-            'score': finalScore
-        });
-    }
+        var topRecMovies = [];
+
+        for (var m = 0; m < _MovieRating.length; m++) {
+
+            const movie = _MovieRating[m];
+            var movieSum = 0;
+
+            for (var i = 0; i < _TOPUSERS; i++) {
+
+                var p = pearson[i].p;
+                var id = pearson[i].otherUser;
+                var mathcedUser = findUserByID(_userRating, id);
+
+                var userRatedMovie = mathcedUser.ratings.filter(m => m.movieid == movie.movieid);
+
+                if (userRatedMovie.length == 0)
+                    continue;
+
+                // var DifList = findDifferentMovies(_user, mathcedUser).sort((a,b) => {
+                //     return b.rating-a.rating;
+                // });
+
+                var userAVG = parseFloat(mathcedUser.total / mathcedUser.ratings.length);
+
+                movieSum += (p * (parseFloat(userRatedMovie[0].rating) - userAVG));
+            }
+
+            var finalScore = (movieSum / totalP + (user.total / user.ratings.length));
+
+            finalScore = isNaN(finalScore) ? 0 : finalScore;
+
+            topRecMovies.push({
+                'id': movie.movieid,
+                'score': finalScore
+            });
+        }
 
 
-    topRecMovies = topRecMovies.filter((m) => {
-        for (var mov = 0; mov < _favMovies.length; mov++)
-            if (parseInt(_favMovies[mov].movieid) == parseInt(m.id))
-                return false;
-        return true;
-    }).sort((a, b) => { return b.score - a.score; });
+        topRecMovies = topRecMovies.filter((m) => {
+            if (_favMovies) {
+                for (var mov = 0; mov < _favMovies.length; mov++)
+                    if (parseInt(_favMovies[mov].movieid) == parseInt(m.id))
+                        return false;
+            }
+            return true;
+        }).sort((a, b) => { return b.score - a.score; });
 
-    // console.log(topRecMovies);
+        // console.log(topRecMovies);
 
-    $("#recMovies").html('');
-    for (var i = 0; i < 25; i++)
-        $("#recMovies").append($("<li>").html(`<span class="glyphicon glyphicon-plus" onclick="addFavMovieFromRec(${topRecMovies[i].id})"></span> ${getMovieTitleById(topRecMovies[i].id)}`));
-
-    hideElement(".spinner");
+        // return topRecMovies;
+        resolve(topRecMovies);
+    })
 }
 
 function findDifferentMovies(user1, user2) {
@@ -516,4 +525,111 @@ function addFavMovieFromRec(id) {
     });
 
     updateFavList();
+}
+
+// // // // // Validation of scores
+var _randUser;
+var _listOfTestUsers = [];
+var num_movies = 0;
+var rmse_rank = 0;
+var rmse_avg = 0;
+const _numOfTestUsers = 100;
+
+function validateHandler() {
+    return new Promise((resolve, reject) => {
+
+        for (var n = 0; n < _numOfTestUsers; n++) {
+            const currentIndex = n;
+            console.log("User #" + (currentIndex + 1));
+
+            _randUser = getRandomUser();
+            // console.log(_randUser)
+
+            _moviesToValidate = splitMoviesToTrainTest(0.3, _randUser);
+            // console.log(_moviesToValidate)
+
+            _randUser.realTotal = _randUser.total
+            _randUser.total = _moviesToValidate.train.map(m => parseFloat(m.rating)).reduce((a, b) => a + b)
+            _randUser.ratings = _moviesToValidate.train //.concat(_moviesToValidate.test)
+            var _validateAVG = _randUser.total / _randUser.ratings.length
+            // console.log(_randUser)
+
+            calculate(_randUser).then((calculatedMovies) => {
+                // console.log(calculatedMovies);
+                _moviesToValidate.test.forEach((movie) => {
+                    var calcRank = calculatedMovies.filter(m => m.id == movie.movieid)[0].score;
+                    var realRate = movie.realRate;
+                    rmse_rank += Math.pow((parseFloat(realRate) - parseFloat(calcRank)), 2);
+                    rmse_avg += Math.pow((parseFloat(realRate) - parseFloat(_validateAVG)), 2);
+                    // console.log(rmse_rank)
+                    num_movies++;
+                })
+
+                if (currentIndex == _numOfTestUsers - 1)
+                    resolve();
+            });
+        }
+    });
+}
+
+function validate() {
+    _listOfTestUsers = [];
+    num_movies = 0;
+    rmse_rank = 0;
+    rmse_avg = 0;
+
+    validateHandler().then(() => {
+        console.log("rmse_rank: " + Math.sqrt(rmse_rank / num_movies));
+        console.log("rmse_AVG: " + Math.sqrt(rmse_avg / num_movies));
+    })
+}
+
+function getRandomUser() {
+    _randUser = null;
+
+    while (!_randUser) {
+        var _randNumber = Math.floor(Math.random() * _userRating.length)
+
+        if (_listOfTestUsers.filter(u => u == _randNumber).length == 0) {
+            if (_userRating.filter(u => u.id == _randNumber)[0] != undefined){
+                _listOfTestUsers.push(_randNumber);
+                return _userRating.filter(u => u.id == _randNumber)[0]
+            }
+        }
+    }
+}
+
+function splitMoviesToTrainTest(percentage, user) {
+    var movies = { "train": [], "test": [] };
+    var testAmount = Math.floor(percentage * user.ratings.length);
+    for (var i = 0; i < testAmount; i++) {
+        var m = getRandomMovie(user, movies.test);
+        m.realRate = m.rating;
+        movies.test.push(m);
+    }
+
+    for (var i = 0; i < user.ratings.length; i++) {
+        var m = user.ratings[i];
+
+        if (movies.test.filter(mov => mov.movieid == m.movieid).length == 0)
+            movies.train.push(m);
+    }
+
+    return movies;
+}
+
+function getRandomMovie(user, list) {
+    for (var i = 0; i < user.ratings.length; i++) {
+        var randMovie = null;
+
+        while (!randMovie) {
+            var _randNumber = user.ratings[Math.floor(Math.random() * user.ratings.length)]
+
+            if (list.filter(m => m.movieid == _randNumber.movieid).length == 0) {
+                randMovie = _randNumber;
+                return randMovie;
+            }
+
+        }
+    }
 }
